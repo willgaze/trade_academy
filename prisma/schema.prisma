@@ -1,3 +1,6 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -18,13 +21,16 @@ model User {
 }
 
 model Module {
-  id          String    @id @default(cuid())
-  title       String
-  description String
-  order       Int       @unique
-  lessons     Lesson[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id            String          @id @default(cuid())
+  title         String
+  description   String
+  estimatedHours Int
+  topics        String[]
+  lessonsCount  Int
+  slug          String         @unique
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  userProgress  UserProgress[]
 }
 
 model Lesson {
@@ -54,6 +60,18 @@ model Progress {
   updatedAt DateTime @updatedAt
 
   @@unique([userId, lessonId])
+}
+
+model UserProgress {
+  id        String   @id @default(cuid())
+  userId    String
+  moduleId  String
+  progress  Int      @default(0)
+  module    Module   @relation(fields: [moduleId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, moduleId])
 }
 
 enum Role {

@@ -12,9 +12,21 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className="dark">
-      <body className={`${inter.className} min-h-screen bg-black text-white antialiased`}>
-        {children}
-        <Toaster position="bottom-right" />
+      <body className={`${inter.className} min-h-screen bg-background text-foreground antialiased`}>
+        <div className="relative flex min-h-screen flex-col">
+          <div className="flex-1">{children}</div>
+        </div>
+        <Toaster 
+          position="bottom-right"
+          toastOptions={{
+            className: 'bg-background border border-border',
+            style: {
+              background: 'hsl(var(--background))',
+              color: 'hsl(var(--foreground))',
+              border: '1px solid hsl(var(--border))',
+            },
+          }}
+        />
       </body>
     </html>
   )
