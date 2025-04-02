@@ -26,16 +26,13 @@ export default function SignIn() {
       const result = await signIn('credentials', {
         email,
         password,
+        remember: rememberMe,
         callbackUrl: '/modules',
         redirect: true,
       })
 
       if (result?.error) {
         toast.error(result.error)
-      } else {
-        toast.success('Signed in successfully')
-        router.push('/modules')
-        router.refresh()
       }
     } catch (error) {
       toast.error('An error occurred during sign in')
@@ -45,10 +42,10 @@ export default function SignIn() {
   }
 
   return (
-    <div className="container flex items-center justify-center min-h-screen py-12">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-2">
-          <CardTitle className="text-2xl font-bold text-center">Welcome back</CardTitle>
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <Card className="w-full max-w-md mx-auto">
+        <CardHeader>
+          <CardTitle className="text-2xl text-center">Welcome back</CardTitle>
           <CardDescription className="text-center">
             Sign in to your account to continue
           </CardDescription>
@@ -77,18 +74,20 @@ export default function SignIn() {
                 required
               />
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="items-top flex space-x-2">
               <Checkbox
                 id="remember"
                 checked={rememberMe}
                 onCheckedChange={setRememberMe}
               />
-              <Label
-                htmlFor="remember"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Remember me
-              </Label>
+              <div className="grid gap-1.5 leading-none">
+                <Label
+                  htmlFor="remember"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Remember me
+                </Label>
+              </div>
             </div>
           </CardContent>
           <CardFooter>
