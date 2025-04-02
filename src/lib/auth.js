@@ -1,7 +1,7 @@
-import { getServerSession } from "next-auth"
+import NextAuth from 'next-auth/next'
+import { getServerSession } from "next-auth/next"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import { PrismaClient } from "@prisma/client"
-import CredentialsProvider from "next-auth/providers/credentials"
 import bcrypt from "bcryptjs"
 
 const prisma = new PrismaClient()
@@ -9,8 +9,10 @@ const prisma = new PrismaClient()
 export const authOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
-    CredentialsProvider({
-      name: "Credentials",
+    {
+      id: 'credentials',
+      name: 'Credentials',
+      type: 'credentials',
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" }
@@ -43,7 +45,7 @@ export const authOptions = {
           role: user.role,
         }
       }
-    })
+    }
   ],
   session: {
     strategy: "jwt"
@@ -68,29 +70,4 @@ export const authOptions = {
   }
 }
 
-export const auth = () => getServerSession(authOptions)
-
-export async function signIn(email, password) {
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  })
-
-  if (error) throw error
-  return data
-}
-
-export async function signUp(email, password) {
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-  })
-
-  if (error) throw error
-  return data
-}
-
-export async function signOut() {
-  const { error } = await supabase.auth.signOut()
-  if (error) throw error
-} 
+export const auth = () => getServerSession(authOptions) 

@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { LogIn } from "lucide-react"
-import { signIn } from "@/lib/auth"
-import { useRouter } from 'next/navigation'
+import { signIn } from "next-auth/react"
+import { useRouter, useSearchParams } from 'next/navigation'
 import toast from 'react-hot-toast'
 
 export default function SignInPage() {
@@ -14,18 +14,31 @@ export default function SignInPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const callbackUrl = searchParams.get('callbackUrl') || '/modules'
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
 
     try {
-      await signIn(email, password)
-      toast.success('Successfully signed in!')
-      router.push('/modules')
+      const result = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
+        callbackUrl,
+      })
+
+      if (!result?.error) {
+        toast.success('Successfully signed in!')
+        router.push(callbackUrl)
+        router.refresh()
+      } else {
+        toast.error(result.error === 'CredentialsSignin' ? 'Invalid credentials' : result.error)
+      }
     } catch (error) {
       console.error('Sign in error:', error)
-      toast.error(error.message || 'Failed to sign in')
+      toast.error('An error occurred while signing in')
     } finally {
       setLoading(false)
     }
@@ -52,6 +65,8 @@ export default function SignInPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  disabled={loading}
+                  className="w-full"
                 />
               </div>
               <div className="space-y-2">
@@ -65,6 +80,8 @@ export default function SignInPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  disabled={loading}
+                  className="w-full"
                 />
               </div>
             </CardContent>
