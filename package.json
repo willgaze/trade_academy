@@ -9,11 +9,13 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@prisma/client": "^6.5.0",
     "@radix-ui/react-slot": "^1.1.2",
     "@radix-ui/react-toast": "^1.2.6",
     "@supabase/supabase-js": "^2.49.4",
     "next": "14.0.4",
     "openai": "^4.91.1",
+    "prisma": "^6.5.0",
     "react": "^18",
     "react-dom": "^18",
     "react-hot-toast": "^2.5.2",
