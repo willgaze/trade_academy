@@ -1,25 +1,74 @@
-import { createClient } from '@supabase/supabase-js'
+import { getServerSession } from "next-auth"
+import { PrismaAdapter } from "@auth/prisma-adapter"
+import { PrismaClient } from "@prisma/client"
+import CredentialsProvider from "next-auth/providers/credentials"
+import bcrypt from "bcryptjs"
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const prisma = new PrismaClient()
 
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const authOptions = {
+  adapter: PrismaAdapter(prisma),
+  providers: [
+    CredentialsProvider({
+      name: "Credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" }
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Missing credentials")
+        }
 
-export async function auth() {
-  try {
-    const { data: { session }, error } = await supabase.auth.getSession()
-    
-    if (error) {
-      console.error('Auth error:', error.message)
-      return null
+        const user = await prisma.user.findUnique({
+          where: {
+            email: credentials.email,
+          },
+        })
+
+        if (!user) {
+          throw new Error("Invalid credentials")
+        }
+
+        const isValid = await bcrypt.compare(credentials.password, user.password)
+
+        if (!isValid) {
+          throw new Error("Invalid credentials")
+        }
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        }
+      }
+    })
+  ],
+  session: {
+    strategy: "jwt"
+  },
+  pages: {
+    signIn: '/auth/signin',
+  },
+  callbacks: {
+    async session({ session, token }) {
+      if (token) {
+        session.user.id = token.sub
+        session.user.role = token.role
+      }
+      return session
+    },
+    async jwt({ token, user }) {
+      if (user) {
+        token.role = user.role
+      }
+      return token
     }
-
-    return session
-  } catch (error) {
-    console.error('Auth error:', error)
-    return null
   }
 }
+
+export const auth = () => getServerSession(authOptions)
 
 export async function signIn(email, password) {
   const { data, error } = await supabase.auth.signInWithPassword({
