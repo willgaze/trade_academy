@@ -1,73 +1,61 @@
-import NextAuth from 'next-auth/next'
-import { getServerSession } from "next-auth/next"
-import { PrismaAdapter } from "@auth/prisma-adapter"
-import { PrismaClient } from "@prisma/client"
-import bcrypt from "bcryptjs"
-
-const prisma = new PrismaClient()
+import { compare } from "bcryptjs"
+import prisma from "@/lib/prisma"
+import { getServerSession } from "next-auth"
+import CredentialsProvider from "next-auth/providers/credentials"
 
 export const authOptions = {
-  adapter: PrismaAdapter(prisma),
+  secret: process.env.NEXTAUTH_SECRET,
+  pages: {
+    signIn: '/auth/signin',
+  },
+  session: {
+    strategy: 'jwt',
+    maxAge: 24 * 60 * 60, // 1 day
+  },
   providers: [
-    {
-      id: 'credentials',
+    CredentialsProvider({
       name: 'Credentials',
-      type: 'credentials',
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          throw new Error("Missing credentials")
+          return null
         }
 
         const user = await prisma.user.findUnique({
           where: {
-            email: credentials.email,
+            email: credentials.email
           },
+          select: {
+            id: true,
+            email: true,
+            password: true,
+          }
         })
 
-        if (!user) {
-          throw new Error("Invalid credentials")
-        }
-
-        const isValid = await bcrypt.compare(credentials.password, user.password)
-
-        if (!isValid) {
-          throw new Error("Invalid credentials")
+        if (!user || !(await compare(credentials.password, user.password))) {
+          return null
         }
 
         return {
           id: user.id,
           email: user.email,
-          name: user.name,
-          role: user.role,
         }
       }
-    }
+    })
   ],
-  session: {
-    strategy: "jwt"
-  },
-  pages: {
-    signIn: '/auth/signin',
-  },
   callbacks: {
     async session({ session, token }) {
-      if (token) {
+      if (session?.user) {
         session.user.id = token.sub
-        session.user.role = token.role
       }
       return session
-    },
-    async jwt({ token, user }) {
-      if (user) {
-        token.role = user.role
-      }
-      return token
     }
   }
 }
 
-export const auth = () => getServerSession(authOptions) 
+export async function auth() {
+  return await getServerSession(authOptions)
+} 

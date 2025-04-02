@@ -6,45 +6,47 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String    @unique
-  password      String
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  progress      Progress[]
+  id           String         @id @default(cuid())
+  name         String?
+  email        String         @unique
+  password     String
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  progress     Progress[]
+  UserProgress UserProgress[]
 }
 
 model Module {
-  id             String    @id @default(cuid())
+  id             String         @id @default(cuid())
   title          String
   description    String
   estimatedHours Int
   order          Int
-  published      Boolean   @default(true)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  published      Boolean        @default(true)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
   lessons        Lesson[]
   progress       Progress[]
+  UserProgress   UserProgress[]
 }
 
 model Lesson {
-  id          String    @id @default(cuid())
+  id          String     @id @default(cuid())
   title       String
   description String
   content     String
   duration    Int
   order       Int
-  published   Boolean   @default(true)
+  published   Boolean    @default(true)
   moduleId    String
-  module      Module    @relation(fields: [moduleId], references: [id])
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  module      Module     @relation(fields: [moduleId], references: [id])
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
   progress    Progress[]
 }
 
@@ -80,4 +82,4 @@ enum Role {
   ADMIN
   INSTRUCTOR
   APPRENTICE
-} 
+}
