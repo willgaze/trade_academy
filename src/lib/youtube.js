@@ -1,7 +1,21 @@
 import { YoutubeTranscript } from 'youtube-transcript';
 import OpenAI from 'openai';
 
-const openai = new OpenAI(process.env.OPENAI_API_KEY);
+// Built lazily, and only when a key exists.
+//
+// This used to be `new OpenAI(process.env.OPENAI_API_KEY)` at module scope,
+// which had two faults. The SDK takes an options object, not a string, so the
+// key was never actually applied. And constructing at import time meant the
+// SDK's own "OPENAI_API_KEY is missing" error was thrown by the import itself —
+// so every lesson page returned HTTP 500 when no key was set, even though quiz
+// generation is an optional extra the page does not need in order to render.
+let client = null;
+
+function getOpenAI() {
+  if (!process.env.OPENAI_API_KEY) return null;
+  if (!client) client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  return client;
+}
 
 export async function getVideoTranscript(videoUrl) {
   try {
@@ -15,6 +29,12 @@ export async function getVideoTranscript(videoUrl) {
 }
 
 export async function generateQuizFromTranscript(transcript) {
+  const openai = getOpenAI();
+  if (!openai) {
+    // No key configured. The lesson still renders; it just has no quiz.
+    return null;
+  }
+
   try {
     const response = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",

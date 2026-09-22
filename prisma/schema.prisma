@@ -77,9 +77,3 @@ model UserProgress {
 
   @@unique([userId, moduleId])
 }
-
-enum Role {
-  ADMIN
-  INSTRUCTOR
-  APPRENTICE
-}
