@@ -37,3 +37,7 @@ next-env.d.ts
 
 # local env files (never commit — they hold real secrets)
 .env
+
+# local dev database — rebuild with: npx prisma migrate dev && npm run seed
+prisma/*.db
+prisma/*.db-journal
