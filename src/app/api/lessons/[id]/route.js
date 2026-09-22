@@ -3,9 +3,11 @@ import prisma from '@/lib/db';
 
 export async function GET(request, { params }) {
   try {
+    const { id } = await params;
+
     const lesson = await prisma.lesson.findUnique({
       where: {
-        id: params.id,
+        id,
       },
       include: {
         module: true,
@@ -31,12 +33,13 @@ export async function GET(request, { params }) {
 
 export async function PUT(request, { params }) {
   try {
+    const { id } = await params;
     const body = await request.json();
     const { title, description, videoUrl, moduleId, order } = body;
 
     const lesson = await prisma.lesson.update({
       where: {
-        id: params.id,
+        id,
       },
       data: {
         title,
@@ -62,9 +65,11 @@ export async function PUT(request, { params }) {
 
 export async function DELETE(request, { params }) {
   try {
+    const { id } = await params;
+
     await prisma.lesson.delete({
       where: {
-        id: params.id,
+        id,
       },
     });
 

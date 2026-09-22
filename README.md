@@ -31,10 +31,10 @@ Built but unproven, because there is no real content to exercise it:
 
 ## Tech Stack
 
-- **Frontend:** Next.js 14, TailwindCSS, Radix UI, React Hot Toast
+- **Frontend:** Next.js 16, React 19, TailwindCSS, Radix UI, React Hot Toast
 - **Backend:** Next.js API routes, Prisma ORM
 - **Database:** SQLite (`prisma/dev.db`), created locally — not committed
-- **Auth:** NextAuth.js, credentials provider
+- **Auth:** NextAuth.js v5 (Auth.js), credentials provider
 - **AI:** OpenAI, for quiz generation only
 
 > The database is SQLite, not PostgreSQL. `prisma/schema.prisma` hardcodes
@@ -82,10 +82,12 @@ Sign in with the seeded account: `test@example.com` / `password123`.
 
 ## Known Issues
 
-- **Five npm advisories remain, three critical**, all in `next` and the
-  NextAuth stack. Clearing them requires Next 14 → 16 and next-auth 4 → 5,
-  which are breaking migrations rather than patch bumps. This must be done
-  before the app holds any real apprentice data.
+- **`next-auth` is on a beta release** (`5.0.0-beta.32`). This is deliberate
+  and it is not optional: every v4 release carries unpatched critical
+  advisories, including an email-normalizer bypass and email misdelivery, so
+  v5 is the only version with the fixes. Auth.js has shipped v5 as beta for a
+  long time and it is widely used in production, but it is still labelled beta
+  and its API can move. Pin it and read the release notes before upgrading.
 - `prisma/dev.db` is no longer committed. Rebuild it with the two commands
   above.
 

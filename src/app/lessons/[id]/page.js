@@ -1,11 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import VideoPlayer from '@/components/VideoPlayer';
 import Quiz from '@/components/Quiz';
 import toast from 'react-hot-toast';
 
 export default function LessonPage({ params }) {
+  // Next 15+ passes params as a Promise to client components too. `use()`
+  // unwraps it during render; reading `params.id` directly gives undefined.
+  const { id } = use(params);
+
   const [lesson, setLesson] = useState(null);
   const [quiz, setQuiz] = useState(null);
   const [completed, setCompleted] = useState(false);
@@ -14,7 +18,7 @@ export default function LessonPage({ params }) {
   useEffect(() => {
     async function fetchLesson() {
       try {
-        const response = await fetch(`/api/lessons/${params.id}`);
+        const response = await fetch(`/api/lessons/${id}`);
         if (!response.ok) throw new Error('Failed to fetch lesson');
         const data = await response.json();
         setLesson(data);
@@ -27,7 +31,7 @@ export default function LessonPage({ params }) {
     }
 
     fetchLesson();
-  }, [params.id]);
+  }, [id]);
 
   const handleQuizGenerated = (quizData) => {
     setQuiz(quizData.questions);
@@ -42,7 +46,7 @@ export default function LessonPage({ params }) {
         },
         body: JSON.stringify({
           userId: 'temp-user-id', // Replace with actual user ID from auth
-          lessonId: params.id,
+          lessonId: id,
           score,
         }),
       });
