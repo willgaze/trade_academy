@@ -1,7 +1,6 @@
-import { authOptions } from "@/lib/auth"
-import NextAuth from "next-auth"
+// v5 exposes ready-made handlers from the NextAuth() call in src/lib/auth.js.
+// v4 built a single handler here with NextAuth(authOptions) and aliased it to
+// both verbs.
+import { handlers } from "@/lib/auth"
 
-const handler = NextAuth(authOptions)
-
-export const GET = handler
-export const POST = handler 
+export const { GET, POST } = handlers

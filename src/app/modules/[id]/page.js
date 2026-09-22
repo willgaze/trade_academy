@@ -7,15 +7,19 @@ import { PlayCircle, Clock, BookOpen } from "lucide-react"
 import Link from "next/link"
 
 export default async function ModuleDetailsPage({ params }) {
+  // Next 15+ hands params to a page as a Promise, so it has to be awaited
+  // before any property is read.
+  const { id } = await params
+
   const session = await auth()
-  
+
   if (!session) {
     redirect('/auth/signin')
   }
 
   const module = await prisma.module.findUnique({
     where: {
-      id: params.id,
+      id,
       published: true
     },
     include: {

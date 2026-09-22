@@ -1,9 +1,20 @@
 import { compare } from "bcryptjs"
 import prisma from "@/lib/prisma"
-import { getServerSession } from "next-auth"
+import NextAuth from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 
-export const authOptions = {
+// NextAuth v5 (Auth.js). The config is handed to NextAuth() here and the
+// results exported, rather than v4's pattern of exporting a bare `authOptions`
+// object and calling getServerSession(authOptions) at each use site.
+//
+//   handlers - route handlers for /api/auth/[...nextauth]
+//   auth     - server-side session lookup, replaces getServerSession
+//   signIn   - server-side sign-in, also used by the middleware
+//   signOut  - server-side sign-out
+//
+// `auth` keeps the same name and return shape the rest of the app already
+// called, so no page or component needed changing.
+export const { handlers, auth, signIn, signOut } = NextAuth({
   secret: process.env.NEXTAUTH_SECRET,
   pages: {
     signIn: '/auth/signin',
@@ -54,8 +65,4 @@ export const authOptions = {
       return session
     }
   }
-}
-
-export async function auth() {
-  return await getServerSession(authOptions)
-} 
+}) 
