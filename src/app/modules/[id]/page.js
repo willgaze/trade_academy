@@ -61,7 +61,7 @@ export default async function ModuleDetailsPage({ params }) {
                   <CardDescription>{lesson.description}</CardDescription>
                 </div>
                 <Button asChild>
-                  <Link href={`/modules/${module.id}/lessons/${lesson.id}`}>
+                  <Link href={`/lessons/${lesson.id}`}>
                     <PlayCircle className="h-5 w-5 mr-2" />
                     Start Lesson
                   </Link>
