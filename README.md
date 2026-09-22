@@ -1,71 +1,107 @@
 # Trade Academy
 
-A modern, open-source learning platform for plumbing apprentices. Built with Next.js, Prisma, and OpenAI.
+A learning platform for plumbing apprentices. Next.js, Prisma, and optional
+OpenAI quiz generation.
+
+## Status
+
+The application runs and the core journey works end to end: register or sign
+in, browse modules, open a module, open a lesson, record progress.
+
+**There is no curriculum yet.** The seed creates one demo module,
+"Introduction to Plumbing", with two placeholder lessons whose `content` is
+prose rather than a video URL — so the lesson page correctly reports
+"Invalid YouTube URL". Writing real training content is the outstanding work,
+and it needs someone qualified to write it.
 
 ## Features
 
-- 🎥 YouTube video integration with automatic quiz generation
-- 📱 Mobile-first, responsive dark theme design
-- 📊 Progress tracking for apprentices
-- 🤖 AI-powered quiz generation from video content
-- 🔒 User authentication and role management
-- 📚 Structured learning modules based on City & Guilds
+Built and working:
+
+- 🔒 Authentication — register and sign in, credentials with bcrypt (NextAuth)
+- 📚 Modules and lessons, with ordering and a published flag
+- 📊 Per-user progress tracking
+- 🎥 YouTube video player on lesson pages
+- 📱 Mobile-first dark theme
+
+Built but unproven, because there is no real content to exercise it:
+
+- 🤖 Quiz generation from a video transcript via OpenAI. Optional — without
+  `OPENAI_API_KEY` the lesson still renders and simply has no quiz.
 
 ## Tech Stack
 
-- **Frontend:** Next.js 14, TailwindCSS, React Hot Toast
-- **Backend:** Next.js API Routes, Prisma ORM
-- **Database:** PostgreSQL (Neon)
-- **AI:** OpenAI GPT-3.5 for quiz generation
-- **Authentication:** NextAuth.js (coming soon)
+- **Frontend:** Next.js 14, TailwindCSS, Radix UI, React Hot Toast
+- **Backend:** Next.js API routes, Prisma ORM
+- **Database:** SQLite (`prisma/dev.db`), created locally — not committed
+- **Auth:** NextAuth.js, credentials provider
+- **AI:** OpenAI, for quiz generation only
+
+> The database is SQLite, not PostgreSQL. `prisma/schema.prisma` hardcodes
+> `file:./dev.db`, so `DATABASE_URL` is not read. Moving to Postgres means
+> changing the datasource `provider` and `url` and regenerating the migration.
 
 ## Getting Started
 
-1. Clone the repository:
 ```bash
 git clone https://github.com/willgaze/trade_academy.git
 cd trade_academy
-```
-
-2. Install dependencies:
-```bash
 npm install
 ```
 
-3. Set up environment variables:
-Create a `.env` file with:
-```
-DATABASE_URL="your-neon-db-url"
-NEXTAUTH_SECRET="your-secret-key"
-OPENAI_API_KEY="your-openai-api-key"
+Create `.env.local` from the template:
+
+```bash
+cp .env.example .env.local
 ```
 
-4. Run database migrations:
+Fill in:
+
+| Key | Required | Notes |
+| --- | --- | --- |
+| `NEXTAUTH_SECRET` | Yes | Generate with `openssl rand -base64 32` |
+| `NEXTAUTH_URL` | Yes | Must match the port you run on, or sign-in redirects to a dead address |
+| `OPENAI_API_KEY` | No | Quiz generation only; everything else works without it |
+
+Create the database and seed it:
+
 ```bash
 npx prisma migrate dev
+npm run seed
 ```
 
-5. Start the development server:
+The seed is idempotent — running it again will not duplicate rows.
+
+Start the server:
+
 ```bash
 npm run dev
 ```
+
+Sign in with the seeded account: `test@example.com` / `password123`.
+
+## Known Issues
+
+- **Five npm advisories remain, three critical**, all in `next` and the
+  NextAuth stack. Clearing them requires Next 14 → 16 and next-auth 4 → 5,
+  which are breaking migrations rather than patch bumps. This must be done
+  before the app holds any real apprentice data.
+- `prisma/dev.db` is no longer committed. Rebuild it with the two commands
+  above.
 
 ## Project Structure
 
 ```
 src/
-├── app/              # Next.js app router pages
+├── app/              # Next.js app router pages and API routes
 ├── components/       # React components
-├── lib/             # Utility functions
-└── styles/          # Global styles
+└── lib/              # Auth, Prisma client, YouTube/OpenAI helpers
 prisma/
-└── schema.prisma    # Database schema
+├── schema.prisma     # Database schema
+├── migrations/       # Migration history
+└── seed.js           # Demo data (idempotent)
 ```
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-This project is open-source and available under the MIT License.
+MIT.
