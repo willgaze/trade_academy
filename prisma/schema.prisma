@@ -39,7 +39,13 @@ model Lesson {
   id          String     @id @default(cuid())
   title       String
   description String
+  // Lesson body text. Kept separate from videoUrl: a lesson can be text-only.
   content     String
+  // YouTube URL for the lesson video. Optional — a lesson without one simply
+  // renders no player. Both API routes and the lesson page already read and
+  // wrote this field; it was missing from the model, so lesson.videoUrl was
+  // always undefined and every lesson reported "Invalid YouTube URL".
+  videoUrl    String?
   duration    Int
   order       Int
   published   Boolean    @default(true)
