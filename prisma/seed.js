@@ -1,12 +1,18 @@
 const { PrismaClient } = require('@prisma/client')
 const { hash } = require('bcryptjs')
+const { modules } = require('./curriculum')
 
 const prisma = new PrismaClient()
 
+// Seeding is idempotent: running it twice must not duplicate anything, and
+// must not clobber edits made in the app. Modules are matched on title and
+// lessons on (moduleId, title), because neither has a natural unique key in
+// the schema.
+//
+// Content lives in curriculum.js. This file only knows how to put it in.
 async function main() {
   const hashedPassword = await hash('password123', 12)
-  
-  // Create test user
+
   const user = await prisma.user.upsert({
     where: { email: 'test@example.com' },
     update: {},
@@ -17,53 +23,59 @@ async function main() {
     },
   })
 
-  // Create test module. Idempotent: re-running the seed must not duplicate
-  // rows. `create` did, which is how the modules page ended up listing
-  // "Introduction to Plumbing" twice.
-  const existing = await prisma.module.findFirst({
-    where: { title: 'Introduction to Plumbing' },
-  })
+  let modulesSeeded = 0
+  let lessonsSeeded = 0
 
-  const module = existing
-    ? await prisma.module.update({
-        where: { id: existing.id },
-        data: {
-          description:
-            'Learn the basics of plumbing, including tools, materials, and safety procedures.',
-          estimatedHours: 2,
-          order: 1,
-        },
-      })
-    : await prisma.module.create({
-        data: {
-          title: 'Introduction to Plumbing',
-          description:
-            'Learn the basics of plumbing, including tools, materials, and safety procedures.',
-          estimatedHours: 2,
-          order: 1,
-          lessons: {
-            create: [
-              {
-                title: 'Basic Tools',
-                description: 'Learn about the essential tools used in plumbing.',
-                content:
-                  'In this lesson, we will cover the basic tools that every plumber needs...',
-                duration: 30,
-                order: 1,
-              },
-              {
-                title: 'Safety First',
-                description: 'Understanding safety procedures and precautions.',
-                content: 'Safety is paramount in plumbing. In this lesson...',
-                duration: 45,
-                order: 2,
-              },
-            ],
-          },
-        },
+  for (const m of modules) {
+    const { lessons, ...moduleFields } = m
+
+    const existingModule = await prisma.module.findFirst({
+      where: { title: m.title },
+    })
+
+    const savedModule = existingModule
+      ? await prisma.module.update({
+          where: { id: existingModule.id },
+          data: moduleFields,
+        })
+      : await prisma.module.create({ data: moduleFields })
+
+    modulesSeeded++
+
+    for (const l of lessons) {
+      const existingLesson = await prisma.lesson.findFirst({
+        where: { moduleId: savedModule.id, title: l.title },
       })
 
-  console.log({ user, module })
+      if (existingLesson) {
+        await prisma.lesson.update({
+          where: { id: existingLesson.id },
+          data: l,
+        })
+      } else {
+        await prisma.lesson.create({
+          data: { ...l, moduleId: savedModule.id },
+        })
+      }
+
+      lessonsSeeded++
+    }
+  }
+
+  const published = await prisma.module.count({ where: { published: true } })
+
+  console.log(`user            ${user.email}`)
+  console.log(`modules seeded  ${modulesSeeded}`)
+  console.log(`lessons seeded  ${lessonsSeeded}`)
+  console.log(`published       ${published} module(s) visible in the app`)
+
+  if (published === 0) {
+    console.log(
+      '\nNothing is published yet, so the modules page will be empty.\n' +
+        'That is deliberate — the curriculum is a draft awaiting review.\n' +
+        'Publish a module once its content has been checked.'
+    )
+  }
 }
 
 main()
@@ -73,4 +85,4 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect()
-  }) 
+  })
