@@ -3,6 +3,7 @@
 import { useState, useEffect, use } from 'react';
 import VideoPlayer from '@/components/VideoPlayer';
 import Quiz from '@/components/Quiz';
+import LessonContent from '@/components/LessonContent';
 import toast from 'react-hot-toast';
 
 export default function LessonPage({ params }) {
@@ -86,10 +87,19 @@ export default function LessonPage({ params }) {
             <p className="text-gray-400 mt-2">{lesson.description}</p>
           </div>
 
-          <VideoPlayer 
-            videoUrl={lesson.videoUrl} 
-            onQuizGenerated={handleQuizGenerated}
-          />
+          {lesson.videoUrl && (
+            <VideoPlayer
+              videoUrl={lesson.videoUrl}
+              onQuizGenerated={handleQuizGenerated}
+            />
+          )}
+
+          {/* The lesson body. This was never rendered — `content` was stored
+              and then never shown, so a lesson displayed only its title and
+              one-line description however much was written into it. */}
+          {lesson.content && (
+            <LessonContent content={lesson.content} />
+          )}
 
           {quiz && (
             <div className="mt-8 border border-gray-800 rounded-lg">
