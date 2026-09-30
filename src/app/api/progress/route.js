@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db';
+import { requireSession } from '@/lib/api-auth';
 
 export async function POST(request) {
   try {
+    const denied = await requireSession()
+    if (denied) return denied
+
     const body = await request.json();
     const { userId, lessonId, score } = body;
 
@@ -40,6 +44,9 @@ export async function POST(request) {
 
 export async function GET(request) {
   try {
+    const denied = await requireSession()
+    if (denied) return denied
+
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
