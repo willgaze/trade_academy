@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db';
+import { requireSession } from '@/lib/api-auth';
 
 export async function GET(request) {
   try {
+    const denied = await requireSession()
+    if (denied) return denied
+
     const lessons = await prisma.lesson.findMany({
       include: {
         module: true,
@@ -31,6 +35,9 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
+    const denied = await requireSession()
+    if (denied) return denied
+
     const body = await request.json();
     const { title, description, videoUrl, moduleId, order } = body;
 

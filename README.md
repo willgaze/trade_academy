@@ -33,13 +33,9 @@ Built but unproven, because there is no real content to exercise it:
 
 - **Frontend:** Next.js 16, React 19, TailwindCSS, Radix UI, React Hot Toast
 - **Backend:** Next.js API routes, Prisma ORM
-- **Database:** SQLite (`prisma/dev.db`), created locally — not committed
+- **Database:** PostgreSQL, via `DATABASE_URL` (Neon or any hosted Postgres)
 - **Auth:** NextAuth.js v5 (Auth.js), credentials provider
 - **AI:** OpenAI, for quiz generation only
-
-> The database is SQLite, not PostgreSQL. `prisma/schema.prisma` hardcodes
-> `file:./dev.db`, so `DATABASE_URL` is not read. Moving to Postgres means
-> changing the datasource `provider` and `url` and regenerating the migration.
 
 ## Getting Started
 
@@ -49,16 +45,21 @@ cd trade_academy
 npm install
 ```
 
-Create `.env.local` from the template:
+Create `.env` from the template:
 
 ```bash
-cp .env.example .env.local
+cp .env.example .env
 ```
+
+Use `.env`, not `.env.local`. The Prisma CLI reads `.env` only, and Next reads
+it too, so one file covers both. A `DATABASE_URL` that lives only in
+`.env.local` works in the app and fails every `prisma migrate` command.
 
 Fill in:
 
 | Key | Required | Notes |
 | --- | --- | --- |
+| `DATABASE_URL` | Yes | PostgreSQL connection string. Use the pooled one on serverless. |
 | `NEXTAUTH_SECRET` | Yes | Generate with `openssl rand -base64 32` |
 | `NEXTAUTH_URL` | Yes | Must match the port you run on, or sign-in redirects to a dead address |
 | `OPENAI_API_KEY` | No | Quiz generation only; everything else works without it |
@@ -88,8 +89,23 @@ Sign in with the seeded account: `test@example.com` / `password123`.
   v5 is the only version with the fixes. Auth.js has shipped v5 as beta for a
   long time and it is widely used in production, but it is still labelled beta
   and its API can move. Pin it and read the release notes before upgrading.
-- `prisma/dev.db` is no longer committed. Rebuild it with the two commands
-  above.
+- There is no seeded admin path for publishing a module. `published` is
+  flipped directly in the database for now.
+
+## Deploying
+
+The database is Postgres specifically so this can run on serverless. SQLite
+cannot: a Vercel function's filesystem is ephemeral, so there is nowhere to
+keep `dev.db`.
+
+1. Create a Postgres database (Neon, Supabase, or similar).
+2. Set `DATABASE_URL`, `NEXTAUTH_SECRET` and `NEXTAUTH_URL` in the host's
+   environment variables. `NEXTAUTH_URL` must be the deployed domain.
+3. Run the migrations against that database: `npx prisma migrate deploy`.
+4. Seed it if you want the demo account and the draft curriculum.
+
+Nothing is published by default, so a fresh deployment shows an empty modules
+page to a signed-in user. That is intentional.
 
 ## Project Structure
 
